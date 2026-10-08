@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phantom OS - Custom Windows Edition (Unreleased)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#080b11',
+                            card: 'rgba(13, 19, 33, 0.75)',
+                            border: 'rgba(56, 189, 248, 0.18)',
+                            primary: '#38bdf8',
+                            secondary: '#818cf8',
+                            accent: '#06b6d4',
+                            discord: '#5865F2'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #06080e;
+            color: #f1f5f9;
+            overflow-x: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #06080e;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1e293b;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #38bdf8;
+        }
+
+        /* Glassmorphism Classes */
+        .glass-nav {
+            background: rgba(10, 15, 26, 0.82);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .glass-card {
+            background: rgba(13, 19, 33, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Glowing Effects */
+        .glow-button {
+            position: relative;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.35);
+            transition: all 0.3s ease;
+        }
+        .glow-button:hover {
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.65);
+            transform: translateY(-2px);
+        }
+
+        .discord-glow {
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.35);
+            transition: all 0.3s ease;
+        }
+        .discord-glow:hover {
+            box-shadow: 0 0 30px rgba(88, 101, 242, 0.65);
+            transform: translateY(-2px);
+        }
+
+        .glow-text {
+            text-shadow: 0 0 25px rgba(56, 189, 248, 0.55);
+        }
+
+        /* Animated Grid Overlay */
+        .cyber-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="relative min-h-screen flex flex-col justify-between select-none">
+
+    <!-- Interactive Canvas Particles -->
+    <canvas id="particleCanvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+    
+    <!-- Background Grid Effect -->
+    <div class="fixed inset-0 cyber-grid pointer-events-none z-0 opacity-60"></div>
+
+    <!-- Navigation Header -->
+    <nav class="sticky top-0 z-50 glass-nav px-4 py-3 md:px-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            
+            <!-- Left: Start / Logo Button -->
+            <button onclick="triggerToast('Phantom OS: Proiect în dezvoltare activă')" class="flex items-center gap-2.5 px-3 py-1.5 rounded-lg bg-slate-800/60 hover:bg-slate-700/80 border border-slate-700/60 text-slate-200 transition duration-200">
+                <i class="fa-brands fa-windows text-sky-400 text-lg"></i>
+                <span class="text-sm font-semibold tracking-wide">Phantom OS</span>
+            </button>
+
+            <!-- Middle: Navigation Quick Tabs -->
+            <div class="flex items-center gap-1 md:gap-3 bg-slate-900/80 p-1.5 rounded-xl border border-slate-800">
+                <button title="Terminal Info" onclick="switchTab('terminal')" id="nav-terminal" class="p-2 px-3 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 transition flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-xs"></i>
+                    <span class="text-xs font-mono hidden md:inline">Consolă</span>
+                </button>
+                <button title="Specificații" onclick="switchTab('specs')" id="nav-specs" class="p-2 px-3 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition flex items-center gap-2">
+                    <i class="fa-solid fa-microchip text-xs"></i>
+                    <span class="text-xs font-mono hidden md:inline">Optimizări</span>
+                </button>
+                <button title="Status Release" onclick="switchTab('roadmap')" id="nav-roadmap" class="p-2 px-3 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+                    <span class="text-xs font-mono hidden md:inline">Roadmap</span>
+                </button>
+            </div>
+
+            <!-- Right: Live Clock & Discord -->
+            <div class="flex items-center gap-3 md:gap-4">
+                <div id="liveClock" class="hidden sm:block text-xs font-mono text-slate-400 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-800">
+                    --:--:--
+                </div>
+                <a href="https://discord.gg" target="_blank" title="Alătură-te comunității Discord" class="text-slate-400 hover:text-[#5865F2] transition text-lg flex items-center gap-1.5 bg-slate-900/50 px-2.5 py-1 rounded-md border border-slate-800">
+                    <i class="fa-brands fa-discord"></i>
+                    <span class="text-xs hidden lg:inline font-sans text-slate-300">Community</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="relative z-10 flex-1 flex flex-col items-center justify-center px-4 pt-10 pb-16 max-w-5xl mx-auto text-center">
+        
+        <!-- Status Badges -->
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-6">
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-xs font-semibold backdrop-blur-md">
+                <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+                PROIECT ÎN DEZVOLTARE
+            </div>
+            <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-xs font-medium backdrop-blur-md">
+                <i class="fa-brands fa-windows text-xs"></i>
+                MODIFIED WINDOWS ISO
+            </div>
+        </div>
+
+        <!-- Main Title -->
+        <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+            Noul Tău Windows Custom. <br class="hidden sm:block"/>
+            <span class="bg-gradient-to-r from-sky-400 via-cyan-300 to-indigo-400 bg-clip-text text-transparent glow-text">Phantom OS</span>
+        </h1>
+
+        <!-- Subtitle -->
+        <p class="text-base md:text-lg text-slate-300 max-w-2xl font-light leading-relaxed mb-8">
+            O ediție modificată de Windows concepută pentru <span class="text-sky-400 font-medium">performanță extremă în gaming</span>, latență minimă și eliminarea serviciilor inutile (debloated).
+        </p>
+
+        <!-- CTA Action Buttons -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14 w-full sm:w-auto">
+            
+            <!-- Waitlist Button -->
+            <button onclick="openWaitlistModal()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold flex items-center justify-center gap-3 glow-button">
+                <i class="fa-solid fa-user-plus text-sm"></i>
+                <span>Înregistrare Lista de Așteptare</span>
+            </button>
+            
+            <!-- Discord Community Button -->
+            <a href="https://discord.gg" target="_blank" onclick="triggerToast('Se deschide comunitatea Discord...')" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-[#5865F2] hover:bg-[#4752C4] text-white font-semibold flex items-center justify-center gap-3 discord-glow border border-indigo-400/30">
+                <i class="fa-brands fa-discord text-lg"></i>
+                <span>Comunitate Discord</span>
+            </a>
+
+            <!-- Teaser Specs Button -->
+            <button onclick="switchTab('specs')" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-700/80 font-semibold flex items-center justify-center gap-3 backdrop-blur-md transition hover:border-sky-500/40">
+                <i class="fa-solid fa-sliders text-sm"></i>
+                <span>Optimizări</span>
+            </button>
+        </div>
+
+        <!-- Feature Highlights Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full mb-10 text-left">
+            <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 backdrop-blur-md flex items-start gap-3.5">
+                <div class="p-2.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/20 shrink-0">
+                    <i class="fa-solid fa-bolt text-lg"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-100">Debloated & Ultra-Fast</h4>
+                    <p class="text-xs text-slate-400 mt-1">Telemetrie, servicii inutile de fundal și bloatware eliminate complet.</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 backdrop-blur-md flex items-start gap-3.5">
+                <div class="p-2.5 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shrink-0">
+                    <i class="fa-solid fa-gamepad text-lg"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-100">Latență Minimă în Jocuri</h4>
+                    <p class="text-xs text-slate-400 mt-1">Kernel Windows optimizat pentru timpul de răspuns al cadrelor (FPS stabilitate).</p>
+                </div>
+            </div>
+
+            <div class="p-4 rounded-xl bg-slate-900/50 border border-slate-800/80 backdrop-blur-md flex items-start gap-3.5">
+                <div class="p-2.5 rounded-lg bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 shrink-0">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-slate-100">Confidențialitate Sporită</h4>
+                    <p class="text-xs text-slate-400 mt-1">Ajustări avansate de securitate fără a compromite utilitatea sistemului.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Interactive Terminal Window -->
+        <div class="w-full glass-card rounded-2xl overflow-hidden text-left border border-slate-700/50 shadow-2xl transition-all duration-300">
+            
+            <!-- Window Top Bar -->
+            <div class="bg-slate-950/90 px-4 py-3 border-b border-slate-800/80 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block cursor-pointer hover:opacity-100 opacity-80" title="Curăță ecranul" onclick="clearTerminal()"></span>
+                    <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block cursor-pointer hover:opacity-100 opacity-80"></span>
+                    <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block cursor-pointer hover:opacity-100 opacity-80"></span>
+                </div>
+                <div id="windowTitle" class="text-xs font-mono text-slate-400 tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-sky-400 text-xs"></i>
+                    <span id="titleText">Phantom OS Console - Status Sistem</span>
+                </div>
+                <div class="text-right">
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">PRE-RELEASE</span>
+                </div>
+            </div>
+
+            <!-- Terminal Window Content -->
+            <div id="terminalBody" class="p-6 md:p-8 min-h-[300px] font-mono text-sm bg-slate-950/80 text-slate-200 space-y-4">
+                
+                <!-- Default Terminal View -->
+                <div id="terminalMainContent">
+                    <div class="border-b border-slate-800/80 pb-4 mb-4">
+                        <p class="text-sky-400 font-semibold text-base mb-1">Phantom OS [Version Build 2026.01 - Beta Unreleased]</p>
+                        <p class="text-xs text-slate-400 font-sans">Sistem de operare bazat pe o distribuție modificată de Windows.</p>
+                    </div>
+
+                    <div class="space-y-2 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500">Kernel:</span>
+                            <span class="text-slate-300">Windows NT (Optimizat custom)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500">Statut:</span>
+                            <span class="text-amber-400 font-medium">[ÎN DEZVOLTARE - LANSARE ÎN CURÂND]</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500">Servicii Active:</span>
+                            <span class="text-emerald-400">Pachet Redus (~42 de servicii de fundal eliminate)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-slate-500">Grup Discord:</span>
+                            <span class="text-indigo-400">Disponibil pentru update-uri și teasere exclusiviste</span>
+                        </div>
+                    </div>
+
+                    <div id="commandHistory" class="mt-6 space-y-2 text-xs">
+                        <!-- Command output dynamically inserted here -->
+                    </div>
+
+                    <!-- Interactive Command Prompt -->
+                    <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-sky-400">
+                        <span class="text-slate-500">phantom-os@dev:~$</span>
+                        <input type="text" id="terminalInput" placeholder="Scrie 'help', 'status', 'features', 'release'..." class="bg-transparent border-none outline-none text-slate-200 flex-1 text-xs font-mono focus:ring-0 p-0" onkeydown="handleTerminalCommand(event)">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Registration / Waitlist -->
+    <div id="waitlistModal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md hidden transition-all">
+        <div class="glass-card max-w-md w-full p-6 rounded-2xl border border-sky-500/30 text-left relative">
+            <button onclick="closeWaitlistModal()" class="absolute top-4 right-4 text-slate-400 hover:text-white text-sm">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div class="flex items-center gap-3 mb-4">
+                <div class="p-3 rounded-xl bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                    <i class="fa-solid fa-user-plus text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold text-white">Lista de Așteptare Beta</h3>
+                    <p class="text-xs text-slate-400">Fii printre primii care testează ISO-ul Phantom OS.</p>
+                </div>
+            </div>
+            
+            <form onsubmit="submitWaitlist(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1.5">Nume sau Nickname</label>
+                    <input type="text" required placeholder="ex. PhantomUser" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-slate-200 focus:outline-none focus:border-sky-500/60">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1.5">Adresă de Email</label>
+                    <input type="email" required placeholder="nume@domain.com" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-slate-200 focus:outline-none focus:border-sky-500/60">
+                </div>
+                <div>
+                    <label class="block text-slate-300 font-medium mb-1.5">Specificații PC principal (Opțional)</label>
+                    <input type="text" placeholder="ex. i7 12700K, RTX 3070, 32GB RAM" class="w-full px-3.5 py-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-slate-200 focus:outline-none focus:border-sky-500/60">
+                </div>
+                <button type="submit" class="w-full py-3 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 text-white font-semibold glow-button mt-2">
+                    Trimite Înregistrarea
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- UI Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="glass-card px-4 py-3 rounded-xl border border-sky-500/30 flex items-center gap-3 shadow-xl text-xs font-medium text-slate-200">
+            <i class="fa-solid fa-circle-check text-sky-400 text-sm"></i>
+            <span id="toastMessage">Notificare Phantom OS</span>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-slate-800/60 py-4 text-center text-xs text-slate-500 bg-slate-950/40">
+        <p>© Phantom OS 2026. Proiect independent (Ediție Modificată de Windows). Toate drepturile rezervate.</p>
+    </footer>
+
+    <script>
+        // --- 1. Interactive Particle Canvas ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.size = Math.random() * 2 + 0.5;
+                this.speedX = (Math.random() - 0.5) * 0.35;
+                this.speedY = (Math.random() - 0.5) * 0.35;
+                this.alpha = Math.random() * 0.45 + 0.15;
+            }
+
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+
+                if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) {
+                    this.reset();
+                }
+            }
+
+            draw() {
+                ctx.fillStyle = `rgba(56, 189, 248, ${this.alpha})`;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            const count = Math.min(Math.floor(window.innerWidth / 15), 70);
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+        // --- 2. Live Clock ---
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('liveClock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 3. UI Toast Notification ---
+        function triggerToast(msg) {
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toastMessage');
+            toastMessage.textContent = msg;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+
+        // --- 4. Interactive Command Line Interface ---
+        function handleTerminalCommand(e) {
+            if (e.key === 'Enter') {
+                const input = document.getElementById('terminalInput');
+                const command = input.value.trim().toLowerCase();
+                const history = document.getElementById('commandHistory');
+
+                if (!command) return;
+
+                let response = '';
+
+                switch (command) {
+                    case 'help':
+                        response = `<span class="text-sky-300">Comenzi disponibile:</span><br>
+                        - <b class="text-white">status</b>: Verifică stadiul actual de dezvoltare<br>
+                        - <b class="text-white">features</b>: Listează optimizările specifice Windows Custom<br>
+                        - <b class="text-white">release</b>: Informații despre lansare și testare Beta<br>
+                        - <b class="text-white">discord</b>: Link către comunitate<br>
+                        - <b class="text-white">clear</b>: Șterge istoricul din consolă`;
+                        break;
+
+                    case 'status':
+                        response = `<span class="text-amber-400">[IN PROGRESS]</span> Build-ul ISO este în stadiul Alpha/Beta intern. Se testează stabilitatea serviciilor eliminate.`;
+                        break;
+
+                    case 'features':
+                        response = `<span class="text-emerald-400">[OPTIMIZĂRI WINDOWS]</span><br>
+                        1. Telemetrie și colectare date dezactivată 100%<br>
+                        2. Peste 40+ servicii inutile oprite/eliminate<br>
+                        3. Latency & Timer Resolution Tweak pentru FPS stabil<br>
+                        4. Custom Dark Cyber UI Theme implicit`;
+                        break;
+
+                    case 'release':
+                        response = `<span class="text-sky-400">[RELEASE INFO]</span> Nu există o dată fixă de lansare. Te poți înscrie pe lista de așteptare pentru acces Beta privat.`;
+                        break;
+
+                    case 'discord':
+                        response = `<span class="text-indigo-400">[DISCORD]</span> Alătură-te pe <a href="https://discord.gg" target="_blank" class="underline text-sky-300">discord.gg</a> pentru a vedea imagini din dezvoltare!`;
+                        break;
+
+                    case 'clear':
+                        history.innerHTML = '';
+                        input.value = '';
+                        return;
+
+                    default:
+                        response = `<span class="text-rose-400">Comandă necunoscută: '${command}'.</span> Tastați <b class="text-sky-300">help</b> pentru lista de comenzi.`;
+                }
+
+                const entry = document.createElement('div');
+                entry.className = 'border-l-2 border-sky-500/50 pl-2 my-1.5';
+                entry.innerHTML = `<p class="text-slate-400">$ ${command}</p><p class="text-slate-200 mt-0.5">${response}</p>`;
+                
+                history.appendChild(entry);
+                input.value = '';
+            }
+        }
+
+        // --- 5. Navigation Tab Switcher ---
+        function switchTab(tabName) {
+            const terminalBody = document.getElementById('terminalBody');
+            const titleText = document.getElementById('titleText');
+
+            ['terminal', 'specs', 'roadmap'].forEach(t => {
+                const btn = document.getElementById(`nav-${t}`);
+                if (btn) {
+                    if (t === tabName) {
+                        btn.className = "p-2 px-3 rounded-lg bg-sky-500/20 text-sky-400 border border-sky-500/30 transition flex items-center gap-2";
+                    } else {
+                        btn.className = "p-2 px-3 rounded-lg text-slate-400 hover:text-slate-200 hover:bg-slate-800/50 transition flex items-center gap-2";
+                    }
+                }
+            });
+
+            if (tabName === 'terminal') {
+                titleText.textContent = "Phantom OS Console - Status Sistem";
+                terminalBody.innerHTML = `
+                    <div id="terminalMainContent">
+                        <div class="border-b border-slate-800/80 pb-4 mb-4">
+                            <p class="text-sky-400 font-semibold text-base mb-1">Phantom OS [Version Build 2026.01 - Beta Unreleased]</p>
+                            <p class="text-xs text-slate-400 font-sans">Sistem de operare bazat pe o distribuție modificată de Windows.</p>
+                        </div>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-500">Kernel:</span>
+                                <span class="text-slate-300">Windows NT (Optimizat custom)</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-500">Statut:</span>
+                                <span class="text-amber-400 font-medium">[ÎN DEZVOLTARE - LANSARE ÎN CURÂND]</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="text-slate-500">Servicii Active:</span>
+                                <span class="text-emerald-400">Pachet Redus (~42 de servicii de fundal eliminate)</span>
+                            </div>
+                        </div>
+                        <div id="commandHistory" class="mt-6 space-y-2 text-xs"></div>
+                        <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center gap-2 text-sky-400">
+                            <span class="text-slate-500">phantom-os@dev:~$</span>
+                            <input type="text" id="terminalInput" placeholder="Scrie 'help', 'status', 'features'..." class="bg-transparent border-none outline-none text-slate-200 flex-1 text-xs font-mono focus:ring-0 p-0" onkeydown="handleTerminalCommand(event)">
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'specs') {
+                titleText.textContent = "Specificații & Optimizări Windows";
+                terminalBody.innerHTML = `
+                    <div class="space-y-4 font-sans text-xs">
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <h5 class="text-slate-200 font-semibold">Debloat complet</h5>
+                                <p class="text-slate-400 text-[11px]">Fără aplicații preinstalate inutile (No Cortana, Edge Debloated, No Telemetry).</p>
+                            </div>
+                            <span class="text-emerald-400 font-mono font-semibold">ACTIV</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <h5 class="text-slate-200 font-semibold">Gpu & RAM Optimization</h5>
+                                <p class="text-slate-400 text-[11px]">Consum redus de memorie RAM la pornirea sistemului (~1.2 GB IDLE RAM usage).</p>
+                            </div>
+                            <span class="text-sky-400 font-mono font-semibold">TESTED</span>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/60 border border-slate-800 flex items-center justify-between">
+                            <div>
+                                <h5 class="text-slate-200 font-semibold">Input Latency Tweaks</h5>
+                                <p class="text-slate-400 text-[11px]">Ajustări speciale în regedit pentru reducerea input lag-ului în mouse/tastatură.</p>
+                            </div>
+                            <span class="text-indigo-400 font-mono font-semibold">READY</span>
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'roadmap') {
+                titleText.textContent = "Planificarea Dezvoltării (Roadmap)";
+                terminalBody.innerHTML = `
+                    <div class="space-y-3 font-sans text-xs">
+                        <div class="p-3 rounded-lg bg-slate-900/50 border border-emerald-500/30 flex items-center gap-3">
+                            <i class="fa-solid fa-check text-emerald-400 text-base"></i>
+                            <div>
+                                <span class="text-emerald-400 font-semibold">Faza 1: Debloating & Tweaks Kernel</span>
+                                <p class="text-slate-400 text-[11px]">Eliminarea pachetelor nedorite și optimizarea fișierelor de configurare Windows ISO.</p>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/50 border border-amber-500/30 flex items-center gap-3">
+                            <i class="fa-solid fa-spinner animate-spin text-amber-400 text-base"></i>
+                            <div>
+                                <span class="text-amber-400 font-semibold">Faza 2: Testare Beta Privat (În Curs)</span>
+                                <p class="text-slate-400 text-[11px]">Distribuție restrânsă către utilizatorii înregistrați pe lista de așteptare.</p>
+                            </div>
+                        </div>
+                        <div class="p-3 rounded-lg bg-slate-900/50 border border-slate-800 flex items-center gap-3 opacity-60">
+                            <i class="fa-regular fa-clock text-slate-400 text-base"></i>
+                            <div>
+                                <span class="text-slate-300 font-semibold">Faza 3: Lansare Publică ISO</span>
+                                <p class="text-slate-400 text-[11px]">Publicarea pachetului de instalare gratuit pentru comunitate.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // --- 6. Modal Functions ---
+        function openWaitlistModal() {
+            document.getElementById('waitlistModal').classList.remove('hidden');
+        }
+
+        function closeWaitlistModal() {
+            document.getElementById('waitlistModal').classList.add('hidden');
+        }
+
+        function submitWaitlist(e) {
+            e.preventDefault();
+            closeWaitlistModal();
+            triggerToast('Te-ai înregistrat cu succes pe lista de așteptare Beta!');
+        }
+
+        function clearTerminal() {
+            const history = document.getElementById('commandHistory');
+            if (history) {
+                history.innerHTML = '';
+                triggerToast('Istoricul din consolă a fost șters.');
+            }
+        }
+    </script>
+</body>
+</html>
